@@ -1,53 +1,38 @@
 # morgy
 Music organizer
 
+Usage
+=====
+python3 smart_picker.py -d <destination> -q <quantity>
+
+
 Running unit tests
 ==================
 python3 -m unittest
 
 
 TODOS:
-- code format, pylint
-- doksi a használatról, end-to-end a lényeg
-- logging print helyett
-- crucial fixme-k javítása, pl SQLi
-- argparse kiirtása
+- get rid of argparse
+- one common interface, commands call tools
+- end-to-end usage guide
+- logging instead of print
+- crucial fixmes
 
-NOT in scope:
-- meglevő unit testek átírása, kiegészítése
-
-
-Holnaptól:
 - flask endpoint
-    - egy pár adatbázis lekérdezésnek
-    - a smart picker műveletnek
-    - az integrate műveletnek
-    - playlist_generatornak
-    - guitar_markernek
-
-
-Original README:
-
-Usage:
-python3 smart_picker.py -d <destination> -q <quantity>
-
-Run tests:
-python3 -m unittest
-
-TODOs:
+    - for some DB queries
+    - for smart picker
+    - for integrator
+    - for playlist_generator
+    - for guitar_marker
 
 - fix renamer bugs
-- tests for existing features
+- end-to-end tests for existing features
 - new column: guitar
-- one common interface, commands call tools
 - mp3 tagger
 - don't copy those which were copied in the last n songs (n=1000)
 - sane way of configuration, kill constants
-- refactor: kill integrator
 - album cover pictures?
-- FIXMEs
-
-
+- refactor: kill integrator
 
 - integrator refactor requirement:
 1. let the user move directories, songs in their places,
@@ -69,4 +54,3 @@ Steps:
     ask for confirmation about the renaming
 3. move the folder, create parent folder if needed
 4. add them to DB with priority 10
-
