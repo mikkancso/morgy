@@ -6,6 +6,7 @@ import random
 
 from morgy.database import Database
 
+
 class SmartPicker:
     def __init__(self, database=None):
         self.db = database if database else Database()
@@ -15,7 +16,7 @@ class SmartPicker:
         generator = self.db.get_title_path_and_prio()
         for (title, path, prio) in generator:
             # remove ' (live)', because it is the same song
-            title = ''.join(title.split(' (live)'))
+            title = "".join(title.split(" (live)"))
             if title not in titles:
                 titles[title] = list()
             titles[title].append((path, prio))
@@ -70,10 +71,13 @@ class SmartPicker:
             shutil.copyfile(path, dest)
             self.print_progress(str(numbering) + "/" + str(len(list_to_copy)))
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Copy some smartly picked songs.')
-    parser.add_argument('-d', '--destination', help='The destination to copy music.')
-    parser.add_argument('-q', '--quantity', type=int, help='The quantity of music to be copied in MBs.')
+    parser = argparse.ArgumentParser(description="Copy some smartly picked songs.")
+    parser.add_argument("-d", "--destination", help="The destination to copy music.")
+    parser.add_argument(
+        "-q", "--quantity", type=int, help="The quantity of music to be copied in MBs."
+    )
 
     args = parser.parse_args()
     smart_picker = SmartPicker()
@@ -82,5 +86,6 @@ def main():
     # should it be a different class?
     smart_picker.copy_list_to_destination(to_copy, args.destination)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

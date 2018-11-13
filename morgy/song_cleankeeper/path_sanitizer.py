@@ -4,22 +4,20 @@ import os
 
 class PathSanitizer:
     def __init__(self):
-        self.extensions = ['.mp3',
-            '.wma'
-        ]
+        self.extensions = [".mp3", ".wma"]
 
     def handle_dash_and_underscore(self, filename):
-        filename = filename.replace('_', ' ')
-        filename = filename.replace('-', '')
+        filename = filename.replace("_", " ")
+        filename = filename.replace("-", "")
         return filename
 
     def split_by_extension(self, filename):
         for extension in self.extensions:
             if filename.endswith(extension):
                 this_extension = extension
-                filename = filename.replace(extension, '')
+                filename = filename.replace(extension, "")
                 return filename, this_extension
-        return filename, ''
+        return filename, ""
 
     def correct_spaces(self, filename):
         filename, this_extension = self.split_by_extension(filename)
@@ -29,16 +27,16 @@ class PathSanitizer:
         if len(filename) < 3:
             # should log this instead
             print(filename)
-        elif filename[0].isdigit() and filename[1].isdigit() and filename[2] is not ' ':
-            if filename[2] is '.':
-                filename = filename[:2] + ' ' + filename[3:]
+        elif filename[0].isdigit() and filename[1].isdigit() and filename[2] is not " ":
+            if filename[2] is ".":
+                filename = filename[:2] + " " + filename[3:]
             else:
-                filename = filename[:2] + ' ' + filename[2:]
+                filename = filename[:2] + " " + filename[2:]
 
-        while '  ' in filename:
-            filename = filename.replace('  ', ' ')
+        while "  " in filename:
+            filename = filename.replace("  ", " ")
 
-        return ''.join([filename, this_extension])
+        return "".join([filename, this_extension])
 
     def preprocess(self, filename):
         filename = self.handle_dash_and_underscore(filename)
@@ -57,7 +55,7 @@ class PathSanitizer:
                     break
             if to_be_deleted:
                 for filename in filelist:
-                    del(filename[i])
+                    del (filename[i])
             else:
                 i = i + 1
 
@@ -71,7 +69,7 @@ class PathSanitizer:
                     break
             if to_be_deleted:
                 for filename in filelist:
-                    del(filename[i])
+                    del (filename[i])
             else:
                 i = i - 1
 
@@ -89,21 +87,21 @@ class PathSanitizer:
         filelist = self.delete_matches(filelist)
 
         for i, filename in enumerate(filelist):
-            filelist[i] = ' '.join(filename)
+            filelist[i] = " ".join(filename)
 
         for i, filename in enumerate(filelist):
-            filelist[i] = ''.join([filename, extensions[i]])
+            filelist[i] = "".join([filename, extensions[i]])
 
         return filelist
 
     def upper_char(self, string, index):
-        return string[:index] + string[index].upper() + string[index + 1:]
+        return string[:index] + string[index].upper() + string[index + 1 :]
 
     def upper_first_and_all_after_dot(self, filename):
         if filename[0].isdigit() and filename[1].isdigit():
             filename = self.upper_char(filename, 3)
         for i in range(len(filename)):
-            if filename[i] is '.' and i is not len(filename) - 4:
+            if filename[i] is "." and i is not len(filename) - 4:
                 filename = self.upper_char(filename, i + 1)
 
         return filename
@@ -114,8 +112,13 @@ class PathSanitizer:
 
     def recommendation_generator(self, directory):
         for dirpath, dirnames, filenames in os.walk(directory):
-            yield dirpath + '\n'
-            filtered_filenames = [x for x in filenames for extension in self.extensions if x.lower().endswith(extension)]
+            yield dirpath + "\n"
+            filtered_filenames = [
+                x
+                for x in filenames
+                for extension in self.extensions
+                if x.lower().endswith(extension)
+            ]
 
             processed_filenames = filtered_filenames.copy()
 
@@ -128,18 +131,23 @@ class PathSanitizer:
             for i, filename in enumerate(processed_filenames):
                 processed_filenames[i] = self.postprocess(filename)
 
-                yield filtered_filenames[i] + '\t' + processed_filenames[i] + '\n'
+                yield filtered_filenames[i] + "\t" + processed_filenames[i] + "\n"
 
     def write_recommendations(self, directory, outfile_path):
         recommendations = self.recommendation_generator(directory)
-        with open(outfile_path, 'w') as outfile:
+        with open(outfile_path, "w") as outfile:
             for recommendation in recommendations:
                 outfile.write(recommendation)
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Sanitizing mp3 filenames.')
-    parser.add_argument('-d', '--directory', help='The directory to look for music in.')
-    parser.add_argument('-g', '--generate', help='Generate a file in which recommendations for renaming are.')
+    parser = argparse.ArgumentParser(description="Sanitizing mp3 filenames.")
+    parser.add_argument("-d", "--directory", help="The directory to look for music in.")
+    parser.add_argument(
+        "-g",
+        "--generate",
+        help="Generate a file in which recommendations for renaming are.",
+    )
 
     args = parser.parse_args()
 
@@ -147,7 +155,8 @@ def main():
         ps = PathSanitizer()
         ps.write_recommendations(args.directory, args.generate)
     else:
-        print('You need to use the -d and -g target!\n')
+        print("You need to use the -d and -g target!\n")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

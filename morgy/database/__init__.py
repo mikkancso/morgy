@@ -2,12 +2,13 @@ import sqlite3
 import configparser
 from morgy import CONFIG_FILE
 
+
 class Database:
     def __init__(self, path=None):
         if not path:
             config = configparser.ConfigParser()
             config.read(CONFIG_FILE)
-            path = config['DEFAULT']['database_path']
+            path = config["DEFAULT"]["database_path"]
 
         self.conn = sqlite3.connect(path)
         self.conn.execute("PRAGMA foreign_keys = 1")
@@ -15,10 +16,13 @@ class Database:
         self.create_new_tables()
 
     def create_new_tables(self):
-        self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' or type='view'")
+        self.cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' or type='view'"
+        )
         existing_tables = self.cursor.fetchall()
-        if ('details',) not in existing_tables:
-            self.cursor.execute("""CREATE TABLE details(
+        if ("details",) not in existing_tables:
+            self.cursor.execute(
+                """CREATE TABLE details(
                 path text primary key not null,
                 artist text,
                 year int,
@@ -30,8 +34,9 @@ class Database:
                 )"""
             )
             self.conn.commit()
-        if ('guitar',) not in existing_tables:
-            self.cursor.execute("""CREATE TABLE guitar(
+        if ("guitar",) not in existing_tables:
+            self.cursor.execute(
+                """CREATE TABLE guitar(
                 path text primary key not null,
                 guitar int,
                 FOREIGN KEY(path) REFERENCES details(path)
@@ -44,14 +49,16 @@ class Database:
         self.conn.commit()
         self.conn.close()
 
-    def add_detail_row(self, path, artist, year, album, cd_number, number, title, priority):
+    def add_detail_row(
+        self, path, artist, year, album, cd_number, number, title, priority
+    ):
         values = [path, artist, year, album, cd_number, number, title, priority]
         try:
             self.cursor.execute("INSERT INTO details VALUES (?,?,?,?,?,?,?,?)", values)
             self.conn.commit()
         # FIXME: is this the best behaviour?
         except sqlite3.IntegrityError:
-            print('most likely has already been added')
+            print("most likely has already been added")
 
     def add_guitar_row(self, path, guitar):
         values = [path, guitar]
@@ -88,7 +95,10 @@ class Database:
 
     def decrease_prio(self, path):
         path = [path]
-        self.cursor.execute("UPDATE details SET priority = priority - 1 WHERE path LIKE (?) AND priority > 1", path)
+        self.cursor.execute(
+            "UPDATE details SET priority = priority - 1 WHERE path LIKE (?) AND priority > 1",
+            path,
+        )
 
     def delete_entry_with_path(self, path):
         path = [path]

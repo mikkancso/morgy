@@ -1,1 +1,1 @@
-CONFIG_FILE = 'config.ini'
+CONFIG_FILE = "config.ini"

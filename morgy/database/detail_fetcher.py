@@ -1,5 +1,6 @@
 import os
 
+
 class DetailFetcher:
     def split_to_dirs(self, path):
         dirs = list()
@@ -37,8 +38,8 @@ class DetailFetcher:
             artist = dirs[1]
 
         # 00 All/07 Indie, játékzenék/THPS 2/Papa roach - Blood brothers.mp3
-        elif len(dirs) == 2 and ' - ' in name:
-            artist, title = name.split(' - ')
+        elif len(dirs) == 2 and " - " in name:
+            artist, title = name.split(" - ")
 
         elif len(dirs) == 2:
             # 00 All/03 Külföldi Blues, Rock, Metal/Metallica/13 Enter sandman.mp3
