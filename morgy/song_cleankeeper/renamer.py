@@ -1,4 +1,4 @@
-import argparse
+import click
 import os
 
 
@@ -23,21 +23,14 @@ class Renamer:
                             print("File not found: " + current_filename)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Sanitizing mp3 filenames.")
-    parser.add_argument(
-        "apply_file",
-        help="Apply a generated file in which recommendations for renaming are.",
-    )
-
-    args = parser.parse_args()
-
-    if args.apply_file:
-        renamer = Renamer()
-        renamer.apply_recommendations(args.apply_file)
-    else:
-        print("You need to use the -a target!\n")
+@click.command()
+@click.argument("apply_file")
+def rename():
+    """Apply the filename renamings from a file with a format, that
+    path_sanitizer output."""
+    renamer = Renamer()
+    renamer.apply_recommendations(args.apply_file)
 
 
 if __name__ == "__main__":
-    main()
+    rename()

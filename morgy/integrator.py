@@ -1,4 +1,4 @@
-import argparse
+import click
 import os
 import shutil
 import tempfile
@@ -57,16 +57,13 @@ class Integrator:
         self.db_updater.close()
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Integrate new songs into your music folder and database."
-    )
-    parser.add_argument("-i", "--integrate", help="The directory to integrate.")
-
-    args = parser.parse_args()
-    integrator = Integrator(args.integrate)
+@click.command()
+@click.argument("directory")
+def integrate(directory):
+    """Integrate new songs into your music folder and database."""
+    integrator = Integrator(directory)
     integrator.run()
 
 
 if __name__ == "__main__":
-    main()
+    integrate()

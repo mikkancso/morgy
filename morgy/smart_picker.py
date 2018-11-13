@@ -1,4 +1,4 @@
-import argparse
+import click
 import os
 import shutil
 import sys
@@ -72,19 +72,18 @@ class SmartPicker:
             self.print_progress(str(numbering) + "/" + str(len(list_to_copy)))
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Copy some smartly picked songs.")
-    parser.add_argument("-d", "--destination", help="The destination to copy music.")
-    parser.add_argument(
-        "-q", "--quantity", type=int, help="The quantity of music to be copied in MBs."
-    )
-
-    args = parser.parse_args()
+@click.command()
+@click.argument("destination")
+@click.argument("quantity")
+def main(destination, quantity):
+    """Copy some smartly picked songs.
+    Destination is the destination directory to copy music to.
+    Quantity is the amount of music to be copied in MBs."""
     smart_picker = SmartPicker()
-    to_copy = smart_picker.pick(args.quantity * 1024 * 1024)
+    to_copy = smart_picker.pick(quantity * 1024 * 1024)
     smart_picker.decrease_prio(to_copy)
     # should it be a different class?
-    smart_picker.copy_list_to_destination(to_copy, args.destination)
+    smart_picker.copy_list_to_destination(to_copy, destination)
 
 
 if __name__ == "__main__":

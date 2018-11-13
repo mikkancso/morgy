@@ -1,4 +1,4 @@
-import argparse
+import click
 import os
 
 
@@ -140,23 +140,16 @@ class PathSanitizer:
                 outfile.write(recommendation)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Sanitizing mp3 filenames.")
-    parser.add_argument("-d", "--directory", help="The directory to look for music in.")
-    parser.add_argument(
-        "-g",
-        "--generate",
-        help="Generate a file in which recommendations for renaming are.",
-    )
+@click.command()
+@click.argument("directory")
+@click.argument("output_path")
+def sanitize(directory, output_path):
+    """Sanitizing mp3 and wma filenames. It does not do the actual
+     renaming, just writes the recommendations to the file at output_path"""
 
-    args = parser.parse_args()
-
-    if args.generate and args.directory:
-        ps = PathSanitizer()
-        ps.write_recommendations(args.directory, args.generate)
-    else:
-        print("You need to use the -d and -g target!\n")
+    ps = PathSanitizer()
+    ps.write_recommendations(directory, output_path)
 
 
 if __name__ == "__main__":
-    main()
+    sanitize()

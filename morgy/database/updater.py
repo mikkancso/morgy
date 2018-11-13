@@ -1,4 +1,4 @@
-import argparse
+import click
 import os
 from morgy.database import Database
 from morgy.database.detail_fetcher import DetailFetcher
@@ -54,23 +54,19 @@ class DatabaseUpdater:
         self.db.commit_and_close()
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Update the database of songs.")
-    parser.add_argument("-d", "--directory", help="The directory to look for music in.")
-    parser.add_argument(
-        "-p",
-        "--priority",
-        type=int,
-        choices=range(1, 11),
-        default=10,
-        help="The priority to add to new music.",
-    )
-
-    args = parser.parse_args()
-
+@click.command()
+@click.option(
+    "--priority",
+    default=10,
+    help="The priority to add to new music.",
+    type=click.IntRange(1, 10),
+)
+@click.argument("directory")
+def update(directory, priority):
+    """Update the database of songs."""
     db_updater = DatabaseUpdater()
-    db_updater.update_db(args.directory, args.priority)
+    db_updater.update_db(directory, priority)
 
 
 if __name__ == "__main__":
-    main()
+    update()
