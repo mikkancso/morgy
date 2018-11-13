@@ -12,8 +12,6 @@ python3 -m unittest
 
 
 TODOS:
-- get rid of argparse
-- one common interface, commands call tools
 - end-to-end usage guide
 - logging instead of print
 - crucial fixmes

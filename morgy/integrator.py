@@ -1,4 +1,3 @@
-import click
 import os
 import shutil
 import tempfile
@@ -55,15 +54,3 @@ class Integrator:
             self.db_updater.update_db(self.info[folder]["destination"], 10)
         self.db_updater.remove_not_existing_entries()
         self.db_updater.close()
-
-
-@click.command()
-@click.argument("directory")
-def integrate(directory):
-    """Integrate new songs into your music folder and database."""
-    integrator = Integrator(directory)
-    integrator.run()
-
-
-if __name__ == "__main__":
-    integrate()

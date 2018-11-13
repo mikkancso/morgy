@@ -1,4 +1,3 @@
-import click
 import os
 
 
@@ -21,16 +20,3 @@ class Renamer:
                             print("Already renamed: " + new_filename)
                         else:
                             print("File not found: " + current_filename)
-
-
-@click.command()
-@click.argument("apply_file")
-def rename():
-    """Apply the filename renamings from a file with a format, that
-    path_sanitizer output."""
-    renamer = Renamer()
-    renamer.apply_recommendations(args.apply_file)
-
-
-if __name__ == "__main__":
-    rename()

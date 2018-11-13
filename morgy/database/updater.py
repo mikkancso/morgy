@@ -1,4 +1,3 @@
-import click
 import os
 from morgy.database import Database
 from morgy.database.detail_fetcher import DetailFetcher
@@ -52,21 +51,3 @@ class DatabaseUpdater:
 
     def close(self):
         self.db.commit_and_close()
-
-
-@click.command()
-@click.option(
-    "--priority",
-    default=10,
-    help="The priority to add to new music.",
-    type=click.IntRange(1, 10),
-)
-@click.argument("directory")
-def update(directory, priority):
-    """Update the database of songs."""
-    db_updater = DatabaseUpdater()
-    db_updater.update_db(directory, priority)
-
-
-if __name__ == "__main__":
-    update()

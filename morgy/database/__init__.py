@@ -1,13 +1,14 @@
 import sqlite3
 import configparser
-from morgy import CONFIG_FILE
+import morgy
 
 
 class Database:
     def __init__(self, path=None):
         if not path:
             config = configparser.ConfigParser()
-            config.read(CONFIG_FILE)
+            #FIXME: circular dependency
+            config.read(morgy.CONFIG_FILE)
             path = config["DEFAULT"]["database_path"]
 
         self.conn = sqlite3.connect(path)

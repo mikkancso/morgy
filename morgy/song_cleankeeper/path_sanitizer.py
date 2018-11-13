@@ -1,4 +1,3 @@
-import click
 import os
 
 
@@ -138,18 +137,3 @@ class PathSanitizer:
         with open(outfile_path, "w") as outfile:
             for recommendation in recommendations:
                 outfile.write(recommendation)
-
-
-@click.command()
-@click.argument("directory")
-@click.argument("output_path")
-def sanitize(directory, output_path):
-    """Sanitizing mp3 and wma filenames. It does not do the actual
-     renaming, just writes the recommendations to the file at output_path"""
-
-    ps = PathSanitizer()
-    ps.write_recommendations(directory, output_path)
-
-
-if __name__ == "__main__":
-    sanitize()
