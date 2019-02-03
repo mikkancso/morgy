@@ -1,17 +1,13 @@
 import sqlite3
-import configparser
-import morgy
 
 
 class Database:
-    def __init__(self, path=None):
-        if not path:
-            config = configparser.ConfigParser()
-            #FIXME: circular dependency
-            config.read(morgy.CONFIG_FILE)
-            path = config["DEFAULT"]["database_path"]
+    def __init__(self, db_path):
+        self._db_path = db_path
+        self.open()
 
-        self.conn = sqlite3.connect(path)
+    def open(self):
+        self.conn = sqlite3.connect(self._db_path)
         self.conn.execute("PRAGMA foreign_keys = 1")
         self.cursor = self.conn.cursor()
         self.create_new_tables()

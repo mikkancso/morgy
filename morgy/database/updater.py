@@ -4,8 +4,8 @@ from morgy.database.detail_fetcher import DetailFetcher
 
 
 class DatabaseUpdater:
-    def __init__(self):
-        self.db = Database()
+    def __init__(self, db):
+        self.db = db
         self.detail_fetcher = DetailFetcher()
         self.extensions = [".mp3", ".wma"]
 
@@ -22,7 +22,7 @@ class DatabaseUpdater:
                 self.db.delete_entry_with_path_from_guitar(guitar_path[0])
 
         self.db.commit_and_close()
-        self.db = Database()
+        self.db.open()
 
         for path in not_existing_paths:
             self.db.delete_entry_with_path(path)

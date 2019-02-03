@@ -7,8 +7,8 @@ from morgy.database import Database
 
 
 class SmartPicker:
-    def __init__(self, database=None):
-        self.db = database if database else Database()
+    def __init__(self, db):
+        self.db = db
 
     def build_dict_from_database(self):
         titles = dict()

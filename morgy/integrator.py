@@ -8,10 +8,10 @@ from morgy.song_cleankeeper.renamer import Renamer
 
 
 class Integrator:
-    def __init__(self, to_integrate):
+    def __init__(self, to_integrate, db):
         self.to_integrate = os.path.realpath(to_integrate)
         self.info = dict()
-        self.db_updater = DatabaseUpdater()
+        self.db_updater = DatabaseUpdater(db)
         self.path_sanitizer = PathSanitizer()
         self.renamer = Renamer()
 

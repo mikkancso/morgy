@@ -1,4 +1,5 @@
 import click
+import configparser
 
 from morgy.database import Database
 from morgy.database.updater import DatabaseUpdater
@@ -8,6 +9,9 @@ from morgy.integrator import Integrator
 from morgy.smart_picker import SmartPicker
 
 CONFIG_FILE = "config.ini"
+config = configparser.ConfigParser()
+config.read(CONFIG_FILE)
+db = Database(config["DEFAULT"]["database_path"])
 
 
 @click.group()
@@ -25,7 +29,7 @@ def morgy():
 @click.argument("directory")
 def update(directory, priority):
     """Update the database of songs."""
-    db_updater = DatabaseUpdater()
+    db_updater = DatabaseUpdater(db)
     db_updater.update_db(directory, priority)
 
 
@@ -52,7 +56,6 @@ def rename(apply_file):
 @click.argument("path")
 def mark_with_guitar(path):
     """Mark songs as able to play on guitar."""
-    db = Database()
     db.add_guitar_row(path, True)
     db.commit_and_close()
 
@@ -61,7 +64,7 @@ def mark_with_guitar(path):
 @click.argument("directory")
 def integrate(directory):
     """Integrate new songs into your music folder and database."""
-    integrator = Integrator(directory)
+    integrator = Integrator(directory, db)
     integrator.run()
 
 
@@ -70,7 +73,6 @@ def integrate(directory):
 @click.argument("selection")
 def write_playlist(file, selection):
     """Create a playlist by selecting filepaths and write it to a file."""
-    db = Database()
     with open(file, "w") as playlist:
         for song_path in db.get_path_where(selection):
             playlist.write(song_path[0] + "\n")
@@ -83,7 +85,7 @@ def pick_and_copy(destination, quantity):
     """Copy some smartly picked songs.
     Destination is the destination directory to copy music to.
     Quantity is the amount of music to be copied in MBs."""
-    smart_picker = SmartPicker()
+    smart_picker = SmartPicker(db)
     to_copy = smart_picker.pick(quantity * 1024 * 1024)
     smart_picker.decrease_prio(to_copy)
     # should it be a different class?
