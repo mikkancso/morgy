@@ -78,7 +78,7 @@ def write_playlist(file, selection):
 
 @morgy.command()
 @click.argument("destination")
-@click.argument("quantity")
+@click.argument("quantity", type=int)
 def pick_and_copy(destination, quantity):
     """Copy some smartly picked songs.
     Destination is the destination directory to copy music to.
