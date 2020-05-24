@@ -3,3 +3,6 @@ config.ini
 __pycache__/
 *.pyc
 .vscode/
+build/
+dist/
+morgy.egg-info/
