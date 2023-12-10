@@ -92,5 +92,13 @@ def pick_and_copy(destination, quantity):
     smart_picker.copy_list_to_destination(to_copy, destination)
 
 
+@morgy.command()
+@click.argument("destination")
+def write_guitar_files(destination):
+    """Write files marked with guitar to a destination folder."""
+    smart_picker = SmartPicker(db)
+    to_copy = smart_picker.pick_all_from_guitar()
+    smart_picker.copy_list_to_destination(to_copy, destination)
+
 if __name__ == "__main__":
     morgy()

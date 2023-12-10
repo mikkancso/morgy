@@ -62,6 +62,15 @@ class Database:
         self.cursor.execute("INSERT INTO guitar VALUES (?,?)", values)
         self.conn.commit()
 
+    def get_all_guitar_paths(self):
+        self.cursor.execute("SELECT path FROM guitar")
+        while True:
+            results = self.cursor.fetchmany()
+            if not results:
+                break
+            for result in results:
+                yield result
+
     def get_title_path_and_prio(self):
         self.cursor.execute("SELECT title, path, priority FROM details")
         while True:

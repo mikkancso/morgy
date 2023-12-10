@@ -49,6 +49,13 @@ class SmartPicker:
 
         return list_to_copy
 
+    def pick_all_from_guitar(self):
+        guitar_paths = self.db.get_all_guitar_paths()
+        list_to_copy = list()
+        for path in guitar_paths:
+            list_to_copy.append(path[0])
+        return list_to_copy
+
     def decrease_prio(self, list_to_copy):
         for path in list_to_copy:
             self.db.decrease_prio(path)
