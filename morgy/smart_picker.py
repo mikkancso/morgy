@@ -56,7 +56,7 @@ class SmartPicker:
 
     def prepend_number(self, path, number):
         number_to_prepend = str(number).zfill(3)
-        return number_to_prepend + path
+        return number_to_prepend + "_" + path
 
     def print_progress(self, progress):
         sys.stdout.write("\r{}".format(progress))

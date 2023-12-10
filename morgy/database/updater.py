@@ -7,7 +7,7 @@ class DatabaseUpdater:
     def __init__(self, db):
         self.db = db
         self.detail_fetcher = DetailFetcher()
-        self.extensions = [".mp3", ".wma"]
+        self.extensions = [".mp3", ".wma", ".flac"]
 
     def remove_not_existing_entries(self):
         not_existing_paths = list()
@@ -16,6 +16,9 @@ class DatabaseUpdater:
             if not os.path.exists(path[0]):
                 not_existing_paths.append(path[0])
 
+        for path in not_existing_paths:
+            self.db.delete_entry_with_path(path)
+
         for guitar_path in self.db.get_rows_from_table("guitar"):
             if guitar_path[0] in not_existing_paths:
                 print("Deleting {} from guitar table.".format(guitar_path[0]))
@@ -23,9 +26,6 @@ class DatabaseUpdater:
 
         self.db.commit_and_close()
         self.db.open()
-
-        for path in not_existing_paths:
-            self.db.delete_entry_with_path(path)
 
     def update_db(self, directory, priority):
         for dirpath, dirnames, filenames in os.walk(directory):

@@ -3,7 +3,7 @@ import os
 
 class PathSanitizer:
     def __init__(self):
-        self.extensions = [".mp3", ".wma"]
+        self.extensions = [".mp3", ".wma", ".flac"]
 
     def handle_dash_and_underscore(self, filename):
         filename = filename.replace("_", " ")

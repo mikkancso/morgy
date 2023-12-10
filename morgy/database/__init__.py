@@ -36,7 +36,7 @@ class Database:
                 """CREATE TABLE guitar(
                 path text primary key not null,
                 guitar int,
-                FOREIGN KEY(path) REFERENCES details(path)
+                FOREIGN KEY(path) REFERENCES details(path) ON DELETE CASCADE
                 )"""
             )
             self.conn.commit()

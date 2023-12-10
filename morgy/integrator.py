@@ -29,6 +29,7 @@ class Integrator:
             self.to_integrate, self.info[folder]["path"]
         )
 
+        # what if that directory doesn't exist? should create it
         shutil.move(real_folder, self.info[folder]["destination"])
 
     def run(self):
