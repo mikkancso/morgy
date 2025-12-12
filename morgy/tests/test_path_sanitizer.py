@@ -1,17 +1,173 @@
-import unittest
 import os
+import tempfile
+import unittest
 from morgy.song_cleankeeper.path_sanitizer import PathSanitizer
 
 
 class TestFunctionality(unittest.TestCase):
     def setUp(self):
         self.ps = PathSanitizer()
+        self.temp_dir = tempfile.mkdtemp()
+        self.output_file = os.path.join(self.temp_dir, "recommendations.txt")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.temp_dir)
 
     def test_file_is_created(self):
-        self.ps.write_recommendations(
-            "/home/adatok/mp3Miki/01 Külföldi Punk/Bad Religion", "/tmp/test01"
-        )
-        self.assertTrue(os.path.isfile("/tmp/test01"))
+        # Create a test directory with a file
+        test_subdir = os.path.join(self.temp_dir, "test_subdir")
+        os.makedirs(test_subdir)
+        with open(os.path.join(test_subdir, "song.mp3"), "w") as f:
+            f.write("fake content")
+        
+        self.ps.write_recommendations(self.temp_dir, self.output_file)
+        self.assertTrue(os.path.isfile(self.output_file))
+
+    def test_write_recommendations_content_format(self):
+        test_subdir = os.path.join(self.temp_dir, "test_subdir")
+        os.makedirs(test_subdir)
+        with open(os.path.join(test_subdir, "01_test_song.mp3"), "w") as f:
+            f.write("fake content")
+        
+        self.ps.write_recommendations(self.temp_dir, self.output_file)
+        
+        with open(self.output_file, "r") as f:
+            content = f.read()
+        
+        # Should contain directory path and file recommendation
+        self.assertIn(test_subdir, content)
+        self.assertIn("01_test_song.mp3", content)
+        self.assertIn("\t", content)  # Tab separator
+
+    def test_recommendation_generator_single_file(self):
+        test_subdir = os.path.join(self.temp_dir, "test_subdir")
+        os.makedirs(test_subdir)
+        with open(os.path.join(test_subdir, "song.mp3"), "w") as f:
+            f.write("fake content")
+        
+        recommendations = list(self.ps.recommendation_generator(self.temp_dir))
+        
+        # Should have directory line + file recommendation line
+        self.assertGreaterEqual(len(recommendations), 2)
+        self.assertEqual(recommendations[0].strip(), test_subdir)
+        self.assertIn("song.mp3", recommendations[1])
+
+    def test_recommendation_generator_multiple_files(self):
+        test_subdir = os.path.join(self.temp_dir, "test_subdir")
+        os.makedirs(test_subdir)
+        with open(os.path.join(test_subdir, "01_song_one.mp3"), "w") as f:
+            f.write("fake")
+        with open(os.path.join(test_subdir, "02_song_two.mp3"), "w") as f:
+            f.write("fake")
+        
+        recommendations = list(self.ps.recommendation_generator(self.temp_dir))
+        
+        # Should process multiple files
+        file_lines = [r for r in recommendations if "\t" in r]
+        self.assertEqual(len(file_lines), 2)
+
+    def test_recommendation_generator_filters_extensions(self):
+        test_subdir = os.path.join(self.temp_dir, "test_subdir")
+        os.makedirs(test_subdir)
+        with open(os.path.join(test_subdir, "song.mp3"), "w") as f:
+            f.write("fake")
+        with open(os.path.join(test_subdir, "song.wma"), "w") as f:
+            f.write("fake")
+        with open(os.path.join(test_subdir, "song.flac"), "w") as f:
+            f.write("fake")
+        with open(os.path.join(test_subdir, "song.txt"), "w") as f:
+            f.write("fake")
+        
+        recommendations = list(self.ps.recommendation_generator(self.temp_dir))
+        
+        file_lines = [r for r in recommendations if "\t" in r]
+        self.assertEqual(len(file_lines), 3)  # mp3, wma, flac only
+
+    def test_recommendation_generator_case_insensitive_extensions(self):
+        test_subdir = os.path.join(self.temp_dir, "test_subdir")
+        os.makedirs(test_subdir)
+        with open(os.path.join(test_subdir, "song.MP3"), "w") as f:
+            f.write("fake")
+        with open(os.path.join(test_subdir, "song.WMA"), "w") as f:
+            f.write("fake")
+        
+        recommendations = list(self.ps.recommendation_generator(self.temp_dir))
+        
+        file_lines = [r for r in recommendations if "\t" in r]
+        self.assertEqual(len(file_lines), 2)
+
+    def test_recommendation_generator_empty_directory(self):
+        test_subdir = os.path.join(self.temp_dir, "test_subdir")
+        os.makedirs(test_subdir)
+        
+        recommendations = list(self.ps.recommendation_generator(self.temp_dir))
+        
+        # Should only have directory line, no file recommendations
+        file_lines = [r for r in recommendations if "\t" in r]
+        self.assertEqual(len(file_lines), 0)
+
+    def test_recommendation_generator_nested_directories(self):
+        level1 = os.path.join(self.temp_dir, "level1")
+        level2 = os.path.join(level1, "level2")
+        os.makedirs(level2)
+        
+        with open(os.path.join(level2, "song.mp3"), "w") as f:
+            f.write("fake")
+        
+        recommendations = list(self.ps.recommendation_generator(self.temp_dir))
+        
+        # Should have recommendations from nested directory
+        file_lines = [r for r in recommendations if "\t" in r]
+        self.assertEqual(len(file_lines), 1)
+
+    def test_process_integration(self):
+        filelist = [
+            "01_artist_song_one.mp3",
+            "02_artist_song_two.mp3",
+            "03_artist_song_three.mp3",
+        ]
+        
+        result = self.ps.process(filelist)
+        
+        self.assertEqual(len(result), 3)
+        self.assertTrue(all(f.endswith(".mp3") for f in result))
+
+    def test_preprocess_integration(self):
+        filename = "01_THE_SONG-NAME.mp3"
+        result = self.ps.preprocess(filename)
+        
+        # Should lowercase, remove dashes/underscores, correct spaces
+        self.assertNotIn("_", result)
+        self.assertNotIn("-", result)
+        self.assertIn("01", result)
+
+    def test_postprocess_integration(self):
+        filename = "01 test song.mp3"
+        result = self.ps.postprocess(filename)
+        
+        # Should capitalize first letter after number
+        self.assertIn("Test", result)
+
+    def test_full_workflow_single_file(self):
+        test_subdir = os.path.join(self.temp_dir, "test_subdir")
+        os.makedirs(test_subdir)
+        with open(os.path.join(test_subdir, "01_TEST_SONG-NAME.mp3"), "w") as f:
+            f.write("fake")
+        
+        self.ps.write_recommendations(self.temp_dir, self.output_file)
+        
+        with open(self.output_file, "r") as f:
+            content = f.read()
+        
+        # Should have processed the filename
+        self.assertIn("01_TEST_SONG-NAME.mp3", content)  # Original
+        # Processed version should be different (lowercase, no dashes/underscores)
+        lines = content.split("\n")
+        for line in lines:
+            if "\t" in line:
+                original, processed = line.split("\t")
+                self.assertNotEqual(original, processed.strip())
 
 
 class TestHelperFunctions(unittest.TestCase):

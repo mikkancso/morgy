@@ -1,10 +1,7 @@
 import unittest
 import os
-import shutil
 import sqlite3
 import tempfile
-import configparser
-from .. import CONFIG_FILE
 
 from morgy.database import Database
 
@@ -26,14 +23,28 @@ class TestNewDatabase(unittest.TestCase):
 
 class TestExistingDatabase(unittest.TestCase):
     def setUp(self):
-        self.db_file = tempfile.NamedTemporaryFile()
-        config = configparser.ConfigParser()
-        config.read(CONFIG_FILE)
-        shutil.copyfile(config["DEFAULT"]["database_path"], self.db_file.name)
+        self.db_file = tempfile.NamedTemporaryFile(delete=False)
+        self.db_file.close()
         self.db = Database(self.db_file.name)
+        # Populate with test data instead of copying production DB
+        self._populate_test_data()
 
     def tearDown(self):
-        self.db_file.close()
+        self.db.conn.close()
+        os.unlink(self.db_file.name)
+
+    def _populate_test_data(self):
+        """Populate database with known test data."""
+        test_rows = [
+            ("/path/to/song1.mp3", "Artist One", "1990", "Album One", "1", "01", "Song One", 5),
+            ("/path/to/song2.mp3", "Artist Two", "1991", "Album Two", None, "02", "Song Two", 3),
+            ("/path/to/song3.mp3", "Artist One", "1992", "Album Three", "2", "03", "Song Three", 7),
+        ]
+        for row in test_rows:
+            self.db.add_detail_row(*row)
+        # Add some guitar entries
+        self.db.add_guitar_row("/path/to/song1.mp3", 1)
+        self.db.add_guitar_row("/path/to/song3.mp3", 1)
 
     def query(self, query, values=[]):
         self.db.cursor.execute(query, values)
@@ -118,6 +129,124 @@ class TestExistingDatabase(unittest.TestCase):
         self.db.add_detail_row(*row_details)
         with self.assertRaises(sqlite3.IntegrityError):
             self.db.add_guitar_row("definitely not existing", 1)
+
+    def test_get_all_guitar_paths(self):
+        paths = list(self.db.get_all_guitar_paths())
+        self.assertEqual(len(paths), 2)
+        path_tuples = [p[0] for p in paths]
+        self.assertIn("/path/to/song1.mp3", path_tuples)
+        self.assertIn("/path/to/song3.mp3", path_tuples)
+
+    def test_get_all_guitar_paths_empty(self):
+        # Create fresh DB with no guitar entries
+        db_file = tempfile.NamedTemporaryFile(delete=False)
+        db_file.close()
+        db = Database(db_file.name)
+        paths = list(db.get_all_guitar_paths())
+        self.assertEqual(paths, [])
+        db.conn.close()
+        os.unlink(db_file.name)
+
+    def test_delete_entry_with_path(self):
+        self.db.delete_entry_with_path("/path/to/song2.mp3")
+        result = self.query("SELECT path FROM details WHERE path=?", ["/path/to/song2.mp3"])
+        self.assertEqual(len(result), 0)
+
+    def test_delete_entry_with_path_like_pattern(self):
+        # Test LIKE pattern matching
+        self.db.delete_entry_with_path("%song1%")
+        result = self.query("SELECT path FROM details WHERE path LIKE ?", ["%song1%"])
+        self.assertEqual(len(result), 0)
+
+    def test_delete_entry_with_path_cascades_to_guitar(self):
+        # Delete a detail entry that has a guitar entry
+        # Foreign key should cascade delete
+        self.db.delete_entry_with_path("/path/to/song1.mp3")
+        result = self.query("SELECT path FROM guitar WHERE path=?", ["/path/to/song1.mp3"])
+        self.assertEqual(len(result), 0)
+
+    def test_delete_entry_with_path_from_guitar(self):
+        self.db.delete_entry_with_path_from_guitar("/path/to/song1.mp3")
+        result = self.query("SELECT path FROM guitar WHERE path=?", ["/path/to/song1.mp3"])
+        self.assertEqual(len(result), 0)
+        # Details entry should still exist
+        result = self.query("SELECT path FROM details WHERE path=?", ["/path/to/song1.mp3"])
+        self.assertEqual(len(result), 1)
+
+    def test_delete_entry_with_path_from_guitar_like_pattern(self):
+        self.db.delete_entry_with_path_from_guitar("%song1%")
+        result = self.query("SELECT path FROM guitar WHERE path LIKE ?", ["%song1%"])
+        self.assertEqual(len(result), 0)
+
+    def test_commit_and_close(self):
+        # Add a row and commit/close
+        self.db.add_detail_row("test_path", "Artist", "1990", "Album", "1", "01", "Title", 1)
+        self.db.commit_and_close()
+        
+        # Reopen and verify
+        db = Database(self.db_file.name)
+        cursor = db.cursor
+        cursor.execute("SELECT path FROM details WHERE path=?", ["test_path"])
+        result = cursor.fetchall()
+        self.assertEqual(len(result), 1)
+        db.conn.close()
+
+    def test_add_detail_row_duplicate_path(self):
+        # Adding same path twice should not raise, just print message
+        self.db.add_detail_row("duplicate_path", "Artist", "1990", "Album", "1", "01", "Title", 1)
+        # Should not raise exception
+        try:
+            self.db.add_detail_row("duplicate_path", "Artist", "1990", "Album", "1", "01", "Title", 1)
+        except sqlite3.IntegrityError:
+            self.fail("add_detail_row should catch IntegrityError")
+        
+        # Should only have one entry
+        result = self.query("SELECT COUNT(*) FROM details WHERE path=?", ["duplicate_path"])
+        self.assertEqual(result[0][0], 1)
+
+    def test_get_rows_from_table_guitar(self):
+        rows = list(self.db.get_rows_from_table("guitar"))
+        self.assertEqual(len(rows), 2)
+        # Each row should be (path, guitar)
+        for row in rows:
+            self.assertEqual(len(row), 2)
+
+    def test_get_rows_from_table_empty(self):
+        db_file = tempfile.NamedTemporaryFile(delete=False)
+        db_file.close()
+        db = Database(db_file.name)
+        rows = list(db.get_rows_from_table("details"))
+        self.assertEqual(rows, [])
+        db.conn.close()
+        os.unlink(db_file.name)
+
+    def test_get_path_where_empty_result(self):
+        paths = list(self.db.get_path_where("artist='Nonexistent Artist'"))
+        self.assertEqual(paths, [])
+
+    def test_get_path_where_multiple_results(self):
+        paths = list(self.db.get_path_where("artist='Artist One'"))
+        self.assertEqual(len(paths), 2)
+        path_values = [p[0] for p in paths]
+        self.assertIn("/path/to/song1.mp3", path_values)
+        self.assertIn("/path/to/song3.mp3", path_values)
+
+    def test_decrease_prio_like_pattern(self):
+        # Test that LIKE pattern works in decrease_prio
+        self.db.add_detail_row("/test/song.mp3", "Artist", "1990", "Album", "1", "01", "Title", 5)
+        self.db.decrease_prio("%song%")
+        result = self.query("SELECT priority FROM details WHERE path=?", ["/test/song.mp3"])
+        self.assertEqual(result[0][0], 4)
+
+    def test_decrease_prio_multiple_matches(self):
+        # Add multiple paths matching pattern
+        self.db.add_detail_row("/test/song1.mp3", "Artist", "1990", "Album", "1", "01", "Title", 5)
+        self.db.add_detail_row("/test/song2.mp3", "Artist", "1990", "Album", "1", "02", "Title", 3)
+        self.db.decrease_prio("%song%")
+        result1 = self.query("SELECT priority FROM details WHERE path=?", ["/test/song1.mp3"])
+        result2 = self.query("SELECT priority FROM details WHERE path=?", ["/test/song2.mp3"])
+        self.assertEqual(result1[0][0], 4)
+        self.assertEqual(result2[0][0], 2)
 
 
 if __name__ == "__main__":
