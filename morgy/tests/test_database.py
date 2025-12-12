@@ -2,13 +2,19 @@ import unittest
 import os
 import sqlite3
 import tempfile
+from unittest.mock import patch, MagicMock
 
 from morgy.database import Database
 
 
 class TestNewDatabase(unittest.TestCase):
     def setUp(self):
-        pass
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
+    
+    def tearDown(self):
+        self.print_patcher.stop()
 
     def test_schema_is_created_upon_creating_a_new_db(self):
         with tempfile.NamedTemporaryFile() as db:
@@ -26,6 +32,10 @@ class TestNewDatabase(unittest.TestCase):
 
 class TestExistingDatabase(unittest.TestCase):
     def setUp(self):
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
+        
         self.db_file = tempfile.NamedTemporaryFile(delete=False)
         self.db_file.close()
         self.db = Database(self.db_file.name)
@@ -33,6 +43,7 @@ class TestExistingDatabase(unittest.TestCase):
         self._populate_test_data()
 
     def tearDown(self):
+        self.print_patcher.stop()
         self.db.conn.close()
         os.unlink(self.db_file.name)
 

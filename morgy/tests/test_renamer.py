@@ -2,15 +2,21 @@ import unittest
 import os
 import tempfile
 import shutil
+from unittest.mock import patch, MagicMock
 from morgy.song_cleankeeper.renamer import Renamer
 
 
 class TestFunctionality(unittest.TestCase):
     def setUp(self):
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
+        
         self.renamer = Renamer()
         self.temp_dir = tempfile.mkdtemp()
 
     def tearDown(self):
+        self.print_patcher.stop()
         shutil.rmtree(self.temp_dir)
 
     def test_rename(self):
@@ -74,10 +80,15 @@ class TestFunctionality(unittest.TestCase):
 
 class TestErrorHandling(unittest.TestCase):
     def setUp(self):
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
+        
         self.renamer = Renamer()
         self.temp_dir = tempfile.mkdtemp()
 
     def tearDown(self):
+        self.print_patcher.stop()
         shutil.rmtree(self.temp_dir)
 
     def test_file_not_found_error(self):

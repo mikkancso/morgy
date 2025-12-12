@@ -1,16 +1,22 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch, MagicMock
 from morgy.song_cleankeeper.path_sanitizer import PathSanitizer
 
 
 class TestFunctionality(unittest.TestCase):
     def setUp(self):
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
+        
         self.ps = PathSanitizer()
         self.temp_dir = tempfile.mkdtemp()
         self.output_file = os.path.join(self.temp_dir, "recommendations.txt")
 
     def tearDown(self):
+        self.print_patcher.stop()
         import shutil
         shutil.rmtree(self.temp_dir)
 
@@ -175,7 +181,14 @@ class TestFunctionality(unittest.TestCase):
 
 class TestHelperFunctions(unittest.TestCase):
     def setUp(self):
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
+        
         self.ps = PathSanitizer()
+    
+    def tearDown(self):
+        self.print_patcher.stop()
 
     @unittest.skip("feature request")
     def test_upper_first_and_all_before_dot(self):

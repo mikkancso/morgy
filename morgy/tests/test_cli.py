@@ -3,7 +3,7 @@ import os
 import shutil
 import tempfile
 import sqlite3
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from click.testing import CliRunner
 
@@ -19,6 +19,10 @@ class TestCLI(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.db_file = tempfile.NamedTemporaryFile(delete=False)
         self.db_file.close()
+        
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
         
         # Create a temporary database for testing
         self.test_db = Database(self.db_file.name)
@@ -40,6 +44,9 @@ class TestCLI(unittest.TestCase):
         morgy.db = self.test_db
         
     def tearDown(self):
+        # Stop print patcher
+        self.print_patcher.stop()
+        
         # Close test db
         try:
             if hasattr(self.test_db, 'conn') and self.test_db.conn:

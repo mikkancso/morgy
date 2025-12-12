@@ -2,7 +2,7 @@ import unittest
 import os
 import shutil
 import tempfile
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from morgy.database import Database
 from morgy.integrator import Integrator
@@ -10,6 +10,10 @@ from morgy.integrator import Integrator
 
 class TestIntegrator(unittest.TestCase):
     def setUp(self):
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
+        
         self.db_file = tempfile.NamedTemporaryFile(delete=False)
         self.db_file.close()
         self.db = Database(self.db_file.name)
@@ -34,6 +38,7 @@ class TestIntegrator(unittest.TestCase):
             f.write("fake mp3 content")
 
     def tearDown(self):
+        self.print_patcher.stop()
         self.db.conn.close()
         os.unlink(self.db_file.name)
         shutil.rmtree(self.temp_dir)
@@ -158,12 +163,17 @@ class TestIntegratorWorkflows(unittest.TestCase):
     """Integration tests for complete workflows."""
     
     def setUp(self):
+        # Suppress print statements during tests
+        self.print_patcher = patch('builtins.print', MagicMock())
+        self.print_patcher.start()
+        
         self.db_file = tempfile.NamedTemporaryFile(delete=False)
         self.db_file.close()
         self.db = Database(self.db_file.name)
         self.temp_dir = tempfile.mkdtemp()
 
     def tearDown(self):
+        self.print_patcher.stop()
         self.db.conn.close()
         os.unlink(self.db_file.name)
         shutil.rmtree(self.temp_dir)
