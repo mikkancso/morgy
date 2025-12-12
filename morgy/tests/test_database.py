@@ -13,12 +13,15 @@ class TestNewDatabase(unittest.TestCase):
     def test_schema_is_created_upon_creating_a_new_db(self):
         with tempfile.NamedTemporaryFile() as db:
             new_db = Database(db.name)
-            new_db.cursor.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' or type='view'"
-            )
-            existing_tables = new_db.cursor.fetchall()
-            self.assertTrue(("details",) in existing_tables)
-            self.assertTrue(("guitar",) in existing_tables)
+            try:
+                new_db.cursor.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' or type='view'"
+                )
+                existing_tables = new_db.cursor.fetchall()
+                self.assertTrue(("details",) in existing_tables)
+                self.assertTrue(("guitar",) in existing_tables)
+            finally:
+                new_db.conn.close()
 
 
 class TestExistingDatabase(unittest.TestCase):

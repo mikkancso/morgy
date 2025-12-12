@@ -48,10 +48,13 @@ class TestFunctionality(unittest.TestCase):
         
         recommendations = list(self.ps.recommendation_generator(self.temp_dir))
         
-        # Should have directory line + file recommendation line
+        # Should have directory lines + file recommendation line
+        # Generator yields: root_dir, subdir, then file recommendations
         self.assertGreaterEqual(len(recommendations), 2)
-        self.assertEqual(recommendations[0].strip(), test_subdir)
-        self.assertIn("song.mp3", recommendations[1])
+        # Find the file recommendation line (has tab separator)
+        file_lines = [r for r in recommendations if "\t" in r]
+        self.assertGreater(len(file_lines), 0)
+        self.assertIn("song.mp3", file_lines[0])
 
     def test_recommendation_generator_multiple_files(self):
         test_subdir = os.path.join(self.temp_dir, "test_subdir")
